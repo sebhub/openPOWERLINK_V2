@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _DEV_BIT32_             0x00000300L     // 32 bit
 
 // compilers
+#define _DEV_GNUC_              0x00000026L     // GCC
 #define _DEV_GNUC_MINGW_        0x00000025L     // MinGW GCC
 #define _DEV_GNUC_ARM_ALTERA_   0x00000024L     // Altera toolchain mentor ARM EABI GCC
 #define _DEV_GNUC_MICROBLAZE_   0x00000020L     // Xilinx Microblaze GCC
@@ -91,6 +92,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _DEV_MICROBLAZE_BIG_    (_DEV_BIT32_ | _DEV_GNUC_MICROBLAZE_ | _DEV_BIGEND_ | _DEV_64BIT_SUPPORT_ | _DEV_COMMA_EXT_ | _DEV_ONLY_INT_MAIN_ | _DEV_ALIGNMENT_4_ )
 #define _DEV_MICROBLAZE_LITTLE_ (_DEV_BIT32_ | _DEV_GNUC_MICROBLAZE_                | _DEV_64BIT_SUPPORT_ | _DEV_COMMA_EXT_ | _DEV_ONLY_INT_MAIN_ | _DEV_ALIGNMENT_4_ )
 #define _DEV_ARM_ALTERA_EABI_   (_DEV_BIT32_ | _DEV_GNUC_ARM_ALTERA_                | _DEV_64BIT_SUPPORT_ | _DEV_COMMA_EXT_ | _DEV_ONLY_INT_MAIN_)
+#define _DEV_POSIX_             (_DEV_BIT32_ | _DEV_GNUC_                           | _DEV_64BIT_SUPPORT_ | _DEV_COMMA_EXT_)
 //------------------------------------------------------------------------------
 //  useful macros
 
@@ -105,6 +107,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _PXROS_             2
 #define _ECOSPRO_           3
 #define _VXWORKS_           4
+#define _POSIX_             5
 #define _WIN32_             32
 #define _WINCE_             (32 + 0x20000)
 
@@ -137,7 +140,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define TARGET_SYSTEM   _WIN32_                             // WIN32 definition
 #define DEV_SYSTEM      _DEV_WIN32_MINGW_
 #else /* (defined (_WIN32) || defined (__MINGW32__)) */     // unsupported
-#error 'ERROR: TARGET_SYSTEM / DEV_SYSTEM not found!'
+#define TARGET_SYSTEM   _POSIX_
+#define DEV_SYSTEM      _DEV_POSIX_
 #endif
 
 #define OPLK_DEPRECATED      __attribute__((deprecated))
@@ -208,7 +212,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #else /* (TARGET_SYSTEM == _WINCE_) */
 
-#error "ERROR Target platform is not supported"
+#include <oplk/targetdefs/posix.h>
 
 #endif
 

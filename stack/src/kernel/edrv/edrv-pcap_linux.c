@@ -695,6 +695,7 @@ This function gets the interface's MAC address.
 \param[out]     pMacAddr_p          Pointer to store MAC address
 */
 //------------------------------------------------------------------------------
+#ifndef __rtems__
 static void getMacAdrs(const char* pIfName_p, UINT8* pMacAddr_p)
 {
     INT             fd;
@@ -711,6 +712,44 @@ static void getMacAdrs(const char* pIfName_p, UINT8* pMacAddr_p)
 
     OPLK_MEMCPY(pMacAddr_p, ifr.ifr_hwaddr.sa_data, 6);
 }
+#else /* __rtems__ */
+#include <sys/sysctl.h>
+#include <net/route.h>
+#include <net/if_dl.h>
+
+static void getMacAdrs(const char* pIfName_p, UINT8* pMacAddr_p)
+{
+	struct if_msghdr *ifm;
+	struct sockaddr_dl *sdl;
+	u_char *p, *buf;
+	size_t len;
+	int mib[] = { CTL_NET, AF_ROUTE, 0, AF_LINK, NET_RT_IFLIST, 0 };
+
+	OPLK_MEMSET(pMacAddr_p, 0xff, 6);
+
+	if (sysctl(mib, 6, NULL, &len, NULL, 0) < 0)
+		return;
+	if ((buf = OPLK_MALLOC(len)) == NULL)
+		return;
+	if (sysctl(mib, 6, buf, &len, NULL, 0) < 0) {
+		OPLK_FREE(buf);
+		return;
+	}
+	for (p = buf; p < buf + len; p += ifm->ifm_msglen) {
+		ifm = (struct if_msghdr *)p;
+		sdl = (struct sockaddr_dl *)(ifm + 1);
+		if (ifm->ifm_type != RTM_IFINFO ||
+		    (ifm->ifm_addrs & RTA_IFP) == 0)
+			continue;
+		if (sdl->sdl_family != AF_LINK || sdl->sdl_nlen == 0 ||
+		    OPLK_MEMCMP(sdl->sdl_data, pIfName_p, sdl->sdl_nlen) != 0)
+			continue;
+		OPLK_MEMCPY(pMacAddr_p, LLADDR(sdl), sdl->sdl_alen);
+		break;
+	}
+	OPLK_FREE(buf);
+}
+#endif /* __rtems__ */
 
 //------------------------------------------------------------------------------
 /**

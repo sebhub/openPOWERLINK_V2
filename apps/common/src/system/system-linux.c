@@ -58,7 +58,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 // const defines
 //------------------------------------------------------------------------------
+#ifndef __rtems__
 #define SET_CPU_AFFINITY
+#endif /* __rtems__ */
 #define MAIN_THREAD_PRIORITY        20
 
 //------------------------------------------------------------------------------
@@ -141,12 +143,14 @@ int system_init(void)
     struct sigaction    new_action;
 
     /* adjust process priority */
+#ifndef __rtems__
     if (nice(-20) == -1)         // push nice level in case we have no RTPreempt
     {
         TRACE("%s() couldn't set nice value! (%s)\n",
               __func__,
               strerror(errno));
     }
+#endif /* __rtems__ */
     schedParam.sched_priority = MAIN_THREAD_PRIORITY;
     if (pthread_setschedparam(pthread_self(), SCHED_RR, &schedParam) != 0)
     {

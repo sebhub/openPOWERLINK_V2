@@ -54,6 +54,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <console/console.h>
 #include <eventlog/eventlog.h>
 #include <firmwaremanager/firmwaremanager.h>
+#ifdef __rtems__
+#include <assert.h>
+#include <rtems/bsd/bsd.h>
+#endif /* __rtems__ */
 
 #if defined(CONFIG_USE_PCAP)
 #include <pcap/pcap-console.h>
@@ -72,9 +76,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //------------------------------------------------------------------------------
 #define CYCLE_LEN           UINT_MAX
 #define NODEID              0xF0                //=> MN
-#define IP_ADDR             0xc0a86401          // 192.168.100.1
+#define IP_ADDR             0xa01b0001          // 192.168.100.1
 #define SUBNET_MASK         0xFFFFFF00          // 255.255.255.0
-#define DEFAULT_GATEWAY     0xC0A864FE          // 192.168.100.C_ADR_RT1_DEF_NODE_ID
+#define DEFAULT_GATEWAY     0xa01b0001          // 192.168.100.C_ADR_RT1_DEF_NODE_ID
 
 //------------------------------------------------------------------------------
 // module global vars
@@ -618,3 +622,30 @@ static int getOptions(int argc_p,
 }
 
 /// \}
+#ifdef __rtems__
+#include <rtems/imfs.h>
+#include "rootfs.h"
+
+static void test_main(void)
+{
+	char *argv[] = { "mn", "-d", "dwc0", NULL };
+	int rv;
+
+	rv = rtems_tarfs_load("/", rootfs_tar, rootfs_tar_size);
+	assert(rv == 0);
+	sleep(1);
+	main(3, argv);
+}
+
+#define CONFIGURE_MICROSECONDS_PER_TICK 1000
+
+#define CONFIGURE_MAXIMUM_PROCESSORS 24
+
+#define CONFIGURE_STACK_CHECKER_ENABLED
+
+#define TEST_NAME "MN"
+
+#define DEFAULT_NETWORK_NO_STATIC_IFCONFIG
+
+#include "default-network-init.h"
+#endif /* __rtems__ */

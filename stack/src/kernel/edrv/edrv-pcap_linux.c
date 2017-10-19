@@ -661,6 +661,27 @@ static pcap_t* startPcap(void)
     {
         DEBUG_LVL_ERROR_TRACE("%s() couldn't activate PCAP\n", __func__);
     }
+#ifdef __rtems__
+    /*
+     * The BPF on FreeBSD needs a filter, otherwise it will not forward
+     * anything to the application.  Install an "accept everything" filter with
+     * the desired snapshot length.
+     */
+    struct bpf_insn insn;
+    insn.code = (u_short)(BPF_RET | BPF_K);
+    insn.jt = 0;
+    insn.jf = 0;
+    insn.k = 65535;
+
+    struct bpf_program pg;
+    pg.bf_len = 1;
+    pg.bf_insns = &insn;
+
+    if (pcap_setfilter(pPcapInst, &pg) < 0)
+    {
+        DEBUG_LVL_ERROR_TRACE("%s() couldn't set PCAP filter\n", __func__);
+    }
+#endif /* __rtems__ */
     return pPcapInst;
 }
 

@@ -209,6 +209,7 @@ tOplkError target_setIpAdrs(const char* ifName_p,
                             UINT16 mtu_p)
 {
     tOplkError  ret = kErrorOk;
+#ifndef __rtems__
     INT         iRet;
     char        sBufferIp[16];
     char        sBufferMask[16];
@@ -252,6 +253,7 @@ tOplkError target_setIpAdrs(const char* ifName_p,
         TRACE("ifconfig %s %s returned %d\n", ifName_p, sBufferIp, iRet);
         return kErrorNoResource;
     }
+#endif /* __rtems__ */
 
     return ret;
 }

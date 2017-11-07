@@ -341,6 +341,11 @@ void system_startFirmwareManagerThread(tFirmwareManagerThreadCb pfnFwmThreadCb_p
     }
 
     schedParam.sched_priority = 0;
+#ifdef __rtems__
+#ifndef SCHED_IDLE
+#define SCHED_IDLE SCHED_FIFO
+#endif
+#endif /* __rtems__ */
     if (pthread_setschedparam(thread, SCHED_IDLE, &schedParam) != 0)
     {
         TRACE("%s() couldn't set thread scheduling parameters! %d\n",
